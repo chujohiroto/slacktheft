@@ -16,7 +16,7 @@ USAGE:
    slacktheft [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.1
+   0.0.2
 
 AUTHOR:
    Hiroto Chujo <hiroto@irossoftware.com>
@@ -25,9 +25,11 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --token value, -t value  a Slack API token: (see: https://api.slack.com/web) [$SLACK_API_TOKEN]
-   --help, -h               show help
-   --version, -v            print the version
+   --token value, -t value     SLACK API LEGACY TOKEN: (https://api.slack.com/legacy/custom-integrations/legacy-tokens) [$SLACK_API_TOKEN]
+   --skipdump, -s              過去メッセージの取得プロセスをスキップします。
+   --pagesize value, -p value  メッセージを取得する際の一回当たりのページングサイズを指定します。 (default: 10000)
+   --help, -h                  show help
+   --version, -v               print the version
 ```
 
 ## Todo

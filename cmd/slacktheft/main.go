@@ -13,15 +13,24 @@ func main() {
 
 	app.Name = "Slacktheft"
 	app.Usage = "Slack messages dump and RTM"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
 	app.Author = "Hiroto Chujo"
 	app.Email = "hiroto@irossoftware.com"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "token, t",
 			Value:  "",
-			Usage:  "a Slack API token: (see: https://api.slack.com/web)",
+			Usage:  "SLACK API LEGACY TOKEN: (https://api.slack.com/legacy/custom-integrations/legacy-tokens)",
 			EnvVar: "SLACK_API_TOKEN",
+		},
+		cli.BoolFlag{
+			Name:  "skipdump, s",
+			Usage: "過去メッセージの取得プロセスをスキップします。",
+		},
+		cli.IntFlag{
+			Name:  "pagesize, p",
+			Value: 10000,
+			Usage: "メッセージを取得する際の一回当たりのページングサイズを指定します。",
 		},
 	}
 	app.Action = func(context *cli.Context) error {
@@ -48,10 +57,12 @@ func main() {
 			return err
 		}
 
-		err = dumpRooms(token)
-		if err != nil {
-			fmt.Println(string(err.Error()))
-			return err
+		if context.Bool("skipdump") == false {
+			err = dumpRooms(token, context.Int("pagesize"))
+			if err != nil {
+				fmt.Println(string(err.Error()))
+				return err
+			}
 		}
 
 		RTM(token)

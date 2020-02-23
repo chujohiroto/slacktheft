@@ -6,7 +6,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func dumpRooms(token string) error {
+func dumpRooms(token string, count int) error {
 	api := slack.New(
 		token,
 		slack.OptionDebug(false),
@@ -15,7 +15,7 @@ func dumpRooms(token string) error {
 
 	// Dump Channels
 	fmt.Println("dump public channel")
-	_, err := dumpChannels(api)
+	_, err := dumpChannels(api, count)
 
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func dumpRooms(token string) error {
 	return nil
 }
 
-func dumpChannels(api *slack.Client) ([]slack.Channel, error) {
+func dumpChannels(api *slack.Client, count int) ([]slack.Channel, error) {
 	// Todo アーカイブ除去フラグのオプション実装
 	channels, err := api.GetChannels(false)
 
@@ -72,7 +72,7 @@ func dumpChannels(api *slack.Client) ([]slack.Channel, error) {
 
 	for _, channel := range channels {
 		fmt.Println("dump channel " + channel.Name)
-		err = dumpChannel(api, channel.ID, channel.Name, "channel")
+		err = dumpChannel(api, channel.ID, channel.Name, "channel", count)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +81,7 @@ func dumpChannels(api *slack.Client) ([]slack.Channel, error) {
 	return channels, nil
 }
 
-func dumpChannel(api *slack.Client, id, name, channelType string) error {
+func dumpChannel(api *slack.Client, id, name, channelType string, count int) error {
 	var messages []slack.Message
 
 	// Todo Group、Private Channel、DMのオプション実装
@@ -94,7 +94,7 @@ func dumpChannel(api *slack.Client, id, name, channelType string) error {
 	} else {*/
 	//channelPath = path.Join("channel", name)
 
-	messages, err := fetchChannelHistory(api, id)
+	messages, err := fetchChannelHistory(api, id, count)
 	if err != nil {
 		return err
 	}
@@ -120,9 +120,9 @@ func dumpChannel(api *slack.Client, id, name, channelType string) error {
 	return nil
 }
 
-func fetchChannelHistory(api *slack.Client, ID string) ([]slack.Message, error) {
+func fetchChannelHistory(api *slack.Client, ID string, count int) ([]slack.Message, error) {
 	historyParams := slack.NewHistoryParameters()
-	historyParams.Count = 10000
+	historyParams.Count = count
 
 	// Fetch History
 	history, err := api.GetChannelHistory(ID, historyParams)
