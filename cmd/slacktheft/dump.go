@@ -6,16 +6,29 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func dumpRooms(token string, count int) error {
+func getTeamInfo(token string) (*slack.TeamInfo, error) {
+	api := slack.New(
+		token,
+		slack.OptionDebug(false),
+	)
+	info, err := api.GetTeamInfo()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func dumpRooms(token string, count int, workspaceid string) error {
 	api := slack.New(
 		token,
 		slack.OptionDebug(false),
 		//slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
-
 	// Dump Channels
 	fmt.Println("dump public channel")
-	_, err := dumpChannels(api, count)
+	_, err := dumpChannels(api, count, workspaceid)
 
 	if err != nil {
 		return err
@@ -57,7 +70,7 @@ func dumpRooms(token string, count int) error {
 	return nil
 }
 
-func dumpChannels(api *slack.Client, count int) ([]slack.Channel, error) {
+func dumpChannels(api *slack.Client, count int, workspaceid string) ([]slack.Channel, error) {
 	// Todo アーカイブ除去フラグのオプション実装
 	channels, err := api.GetChannels(false)
 
@@ -72,7 +85,7 @@ func dumpChannels(api *slack.Client, count int) ([]slack.Channel, error) {
 
 	for _, channel := range channels {
 		fmt.Println("dump channel " + channel.Name)
-		err = dumpChannel(api, channel.ID, channel.Name, "channel", count)
+		err = dumpChannel(api, channel.ID, channel.Name, "channel", count, workspaceid)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +94,7 @@ func dumpChannels(api *slack.Client, count int) ([]slack.Channel, error) {
 	return channels, nil
 }
 
-func dumpChannel(api *slack.Client, id, name, channelType string, count int) error {
+func dumpChannel(api *slack.Client, id, name, channelType string, count int, workspaceid string) error {
 	var messages []slack.Message
 
 	// Todo Group、Private Channel、DMのオプション実装
@@ -111,7 +124,7 @@ func dumpChannel(api *slack.Client, id, name, channelType string, count int) err
 
 	for _, message := range messages {
 		message.Channel = name
-		err = insert(message)
+		err = insert(message, workspaceid)
 		if err != nil {
 			return err
 		}

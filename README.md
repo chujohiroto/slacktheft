@@ -5,7 +5,7 @@ Slackのパブリックチャンネルのメッセージを取得して、SQlite
 ## Usage
 
 ```
-$ bin/slacktheft -t=SLACKAPILEGACYTOKEN
+$ bin/slacktheft -t=YOUR_SLACK_API_LEGACYTOKEN
 ```
 
 ```
@@ -32,9 +32,19 @@ GLOBAL OPTIONS:
    --version, -v               print the version
 ```
 
+## Docker
+
+Dockerで使用する際は、DockerfileのYOUR_SLACK_API_LEGACYTOKENを https://api.slack.com/legacy/custom-integrations/legacy-tokens で取得したTokenに置き換えてください。
+その後以下のコマンドを実行してください。
+
+```
+$ docker-compose build
+$ docker-compose up -d
+```
+
+Docker上のSQLiteのファイルは、ホストマシンのフォルダのdocker/app/dump/dump.dbに保存されます。
+
 ## Todo
-- 複数ワークスペースの対応（テーブル名をワークスペースの名前にすべきだ...）
 - MySQLの対応
 - FileのSQL Blob対応
 - FileのS3 Server対応
-- Dockerfile作成

@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/securego/gosec v0.0.0-20200203094520-d13bb6d2420c // indirect
 	github.com/slack-go/slack v0.6.2
 	github.com/urfave/cli v1.22.2
 	github.com/urfave/cli/v2 v2.1.1 // indirect

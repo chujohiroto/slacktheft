@@ -8,7 +8,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func RTM(token string) {
+func RTM(token string, workspaceid string) {
 	api := slack.New(
 		token,
 		slack.OptionDebug(false),
@@ -31,7 +31,7 @@ func RTM(token string) {
 		case *slack.MessageEvent:
 			fmt.Printf("Message: %v\n", ev)
 			fmt.Printf("Message: %v\n", msg.Data)
-			insert(slack.Message(*ev))
+			insert(slack.Message(*ev), workspaceid)
 
 		case *slack.PresenceChangeEvent:
 			fmt.Printf("Presence Change: %v\n", ev)

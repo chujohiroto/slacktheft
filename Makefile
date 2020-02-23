@@ -9,7 +9,6 @@ init:
 build:
 	go build -o bin/slacktheft ./cmd/slacktheft
 
-
 # build binary for Raspberry Pi
 build-arm6:
 	GOOS=linux GOARCH=arm GOARM=6 go build -o bin/arm6 ./cmd/slacktheft

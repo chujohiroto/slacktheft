@@ -48,24 +48,32 @@ func main() {
 
 		if err != nil {
 			fmt.Println("ERROR: Auth")
-			os.Exit(2)
+			return err
 		}
 
-		err = migrate()
+		info, err := getTeamInfo(token)
+		if err != nil {
+			fmt.Println(string(err.Error()))
+			return err
+		}
+
+		fmt.Println(info.Name)
+
+		err = migrate(info.ID, info.Name)
 		if err != nil {
 			fmt.Println(string(err.Error()))
 			return err
 		}
 
 		if context.Bool("skipdump") == false {
-			err = dumpRooms(token, context.Int("pagesize"))
+			err = dumpRooms(token, context.Int("pagesize"), info.ID)
 			if err != nil {
 				fmt.Println(string(err.Error()))
 				return err
 			}
 		}
 
-		RTM(token)
+		RTM(token, info.ID)
 		return nil
 	}
 

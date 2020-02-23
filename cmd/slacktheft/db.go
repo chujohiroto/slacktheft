@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"os"
 
 	"github.com/slack-go/slack"
 
@@ -9,16 +11,27 @@ import (
 	"gopkg.in/gorp.v1"
 )
 
-func migrate() (err error) {
+func exists(name string) bool {
+	_, err := os.Stat(name)
+	return !os.IsNotExist(err)
+}
+
+func migrate(workspaceid string, workspacename string) (err error) {
+	if !exists("dump") {
+		if err := os.Mkdir("dump", 0777); err != nil {
+			return err
+		}
+	}
+
 	// Todo MYSQL も選択できるように
-	db, err := sql.Open("sqlite3", "./dump.db")
+	db, err := sql.Open("sqlite3", "./dump/dump.db")
 	if err != nil {
 		return err
 	}
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	dbmap.AddTableWithName(Message{}, "message").SetKeys(false, "Timestamp")
+	dbmap.AddTableWithName(Message{}, workspaceid).SetKeys(false, "Timestamp")
 	dbmap.DropTables()
 	err = dbmap.CreateTablesIfNotExists()
 	if err != nil {
@@ -27,23 +40,41 @@ func migrate() (err error) {
 
 	defer db.Close()
 
+	insertWorkspace(workspaceid, workspacename)
 	return nil
 }
 
-func insert(message slack.Message) (err error) {
+func insertWorkspace(workspaceid string, workspacename string) error {
+	db, err := sql.Open("sqlite3", "./dump/dump.db")
+	if err != nil {
+		return err
+	}
+
+	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	dbmap.AddTableWithName(Workspace{}, "Workspaces").SetKeys(false, "ID")
+	dbmap.DropTables()
+	err = dbmap.CreateTablesIfNotExists()
+	dbmap.Insert(&Workspace{ID: workspaceid, Name: workspacename})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func insert(message slack.Message, workspaceid string) (err error) {
 	ev := slack.MessageEvent(message)
 
 	// mapする　本当にダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイ
 	msg := mappedModel(ev)
 	// Todo MYSQL も選択できるように
-	db, err := sql.Open("sqlite3", "./dump.db")
+	db, err := sql.Open("sqlite3", "./dump/dump.db")
 	if err != nil {
 		return err
 	}
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	dbmap.AddTableWithName(Message{}, "message").SetKeys(false, "Timestamp")
+	dbmap.AddTableWithName(Message{}, workspaceid).SetKeys(false, "Timestamp")
 
 	var pr Message
 	err = dbmap.SelectOne(&pr, "select * from message where Timestamp=?", msg.Timestamp)
@@ -55,7 +86,8 @@ func insert(message slack.Message) (err error) {
 	err = dbmap.Insert(&msg)
 
 	if err != nil {
-		return err
+		fmt.Println(string(err.Error()))
+		return nil
 	}
 
 	defer db.Close()

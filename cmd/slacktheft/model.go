@@ -1,5 +1,10 @@
 package main
 
+type Workspace struct {
+	ID   string
+	Name string
+}
+
 // OutgoingMessage is used for the realtime API, and seems incomplete.
 type OutgoingMessage struct {
 	ID int `json:"id"`
