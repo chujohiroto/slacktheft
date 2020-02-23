@@ -31,6 +31,7 @@ GLOBAL OPTIONS:
 ```
 
 ## Todo
+- 複数ワークスペースの対応（テーブル名をワークスペースの名前にすべきだ...）
 - MySQLの対応
 - FileのSQL Blob対応
 - FileのS3 Server対応
