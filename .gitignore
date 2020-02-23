@@ -1,0 +1,8 @@
+_obj
+_test
+bin
+
+*.exe
+*.test
+*.prof
+*.db
