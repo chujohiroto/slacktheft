@@ -8,6 +8,16 @@ Slackのメッセージを取得して、SQliteに保存するCLI Toolです。
 $ bin/slacktheft -t=YOUR_SLACK_API_LEGACYTOKEN
 ```
 
+プライベートチャンネルやダイレクトメッセージを含める場合
+```
+$ bin/slacktheft -p -d -t=YOUR_SLACK_API_LEGACYTOKEN
+```
+
+過去メッセージの取得を行わない場合
+```
+$ bin/slacktheft -s -t=YOUR_SLACK_API_LEGACYTOKEN
+```
+
 ```
 NAME:
    Slacktheft - SlackのメッセージをWebAPI と RTM APIを使ってリアルタイムにダンプするCLIツールです。
