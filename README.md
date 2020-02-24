@@ -4,6 +4,13 @@ Slackのメッセージを取得して、SQliteに保存するCLI Toolです。
 
 ## Usage
 
+クローンして、ビルドするのだ！ Golangはそれなりに新しいのインストールしといてね
+```
+$ git clone https://github.com/ChujoHiroto/slacktheft
+$ cd slacktheft
+$ make build
+```
+
 ```
 $ bin/slacktheft -t=YOUR_SLACK_API_LEGACYTOKEN
 ```
@@ -52,7 +59,7 @@ Dockerで使用する際は、DockerfileのYOUR_SLACK_API_LEGACYTOKENを https:/
 
 ```
 $ docker-compose build
-$ docker-compose up -d
+$ docker-compose up
 ```
 
 Docker上のSQLiteのファイルは、ホストマシンのフォルダのdocker/app/dump/dump.dbに保存されます。
