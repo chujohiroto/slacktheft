@@ -8,7 +8,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func RTM(token string, workspaceid string) {
+func RTM(token string, workspaceid string, isprivate bool, isdirect bool) {
 	api := slack.New(
 		token,
 		slack.OptionDebug(false),
@@ -25,19 +25,28 @@ func RTM(token string, workspaceid string) {
 			// Ignore hello
 
 		case *slack.ConnectedEvent:
-			fmt.Println("Infos:", ev.Info)
-			fmt.Println("Connection counter:", ev.ConnectionCount)
+			fmt.Println("")
+			fmt.Println("-------------------------------")
+			fmt.Println("RTM API Connected.")
+			fmt.Println("-------------------------------")
+			fmt.Println("")
 
+			//fmt.Println("Infos:", ev.Info)
+			// fmt.Println("Connection counter:", ev.ConnectionCount)
+
+		// Slack Message Event RTM APIはパブリックチャンネルのメッセージしか受け取れない
+		// Event APIだと取得できるらしいので、いずれ挑戦
 		case *slack.MessageEvent:
 			fmt.Printf("Message: %v\n", ev)
 			fmt.Printf("Message: %v\n", msg.Data)
+
 			insert(slack.Message(*ev), workspaceid)
 
 		case *slack.PresenceChangeEvent:
 			fmt.Printf("Presence Change: %v\n", ev)
 
 		case *slack.LatencyReport:
-			fmt.Printf("Current latency: %v\n", ev.Value)
+			// fmt.Printf("Current latency: %v\n", ev.Value)
 
 		case *slack.DesktopNotificationEvent:
 			fmt.Printf("Desktop Notification: %v\n", ev)

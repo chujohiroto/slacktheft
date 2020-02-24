@@ -16,6 +16,25 @@ func exists(name string) bool {
 	return !os.IsNotExist(err)
 }
 
+var globaldbmap gorp.DbMap
+var isOpenDB bool
+
+func openDBMap() (gorp.DbMap, error) {
+
+	if isOpenDB {
+		return globaldbmap, nil
+	}
+
+	// Todo MYSQL も選択できるように
+	db, err := sql.Open("sqlite3", "./dump/dump.db")
+	if err != nil {
+		return gorp.DbMap{}, err
+	}
+	globaldbmap = gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	isOpenDB = true
+	return globaldbmap, nil
+}
+
 func migrate(workspaceid string, workspacename string) (err error) {
 	if !exists("dump") {
 		if err := os.Mkdir("dump", 0777); err != nil {
@@ -23,34 +42,34 @@ func migrate(workspaceid string, workspacename string) (err error) {
 		}
 	}
 
-	// Todo MYSQL も選択できるように
-	db, err := sql.Open("sqlite3", "./dump/dump.db")
+	err = createTable(workspaceid)
+	err = createTable(workspaceid + "-private")
+	err = createTable(workspaceid + "-direct")
+
 	if err != nil {
 		return err
 	}
-
-	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-
-	dbmap.AddTableWithName(Message{}, workspaceid).SetKeys(false, "Timestamp")
-	dbmap.DropTables()
-	err = dbmap.CreateTablesIfNotExists()
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
 
 	insertWorkspace(workspaceid, workspacename)
 	return nil
 }
 
-func insertWorkspace(workspaceid string, workspacename string) error {
-	db, err := sql.Open("sqlite3", "./dump/dump.db")
+func createTable(name string) error {
+	dbmap, err := openDBMap()
+
+	dbmap.AddTableWithName(Message{}, name).SetKeys(false, "Timestamp")
+
+	err = dbmap.CreateTablesIfNotExists()
 	if err != nil {
 		return err
 	}
 
-	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	return nil
+}
+
+func insertWorkspace(workspaceid string, workspacename string) error {
+	dbmap, err := openDBMap()
+
 	dbmap.AddTableWithName(Workspace{}, "Workspaces").SetKeys(false, "ID")
 	dbmap.DropTables()
 	err = dbmap.CreateTablesIfNotExists()
@@ -58,26 +77,27 @@ func insertWorkspace(workspaceid string, workspacename string) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func insert(message slack.Message, workspaceid string) (err error) {
 	ev := slack.MessageEvent(message)
 
-	// mapする　本当にダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイ
+	/*
+		SlackAPIのtypeとDBのtypeでmappingする
+		本当にダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイ
+		ダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイ
+		ダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイダルイ
+	*/
 	msg := mappedModel(ev)
-	// Todo MYSQL も選択できるように
-	db, err := sql.Open("sqlite3", "./dump/dump.db")
-	if err != nil {
-		return err
-	}
 
-	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	dbmap, err := openDBMap()
 
 	dbmap.AddTableWithName(Message{}, workspaceid).SetKeys(false, "Timestamp")
 
 	var pr Message
-	err = dbmap.SelectOne(&pr, "select * from message where Timestamp=?", msg.Timestamp)
+	err = dbmap.SelectOne(&pr, "select * from ? where Timestamp=?", workspaceid, msg.Timestamp)
 
 	if err == nil {
 		return nil
@@ -90,11 +110,59 @@ func insert(message slack.Message, workspaceid string) (err error) {
 		return nil
 	}
 
-	defer db.Close()
+	return nil
+}
+
+func insertPrivate(message slack.Message, workspaceid string) (err error) {
+	ev := slack.MessageEvent(message)
+	msg := mappedModel(ev)
+
+	dbmap, err := openDBMap()
+
+	dbmap.AddTableWithName(Message{}, workspaceid+"-private").SetKeys(false, "Timestamp")
+
+	var pr Message
+	err = dbmap.SelectOne(&pr, "select * from ?-private where Timestamp=?", workspaceid, msg.Timestamp)
+
+	if err == nil {
+		return nil
+	}
+
+	err = dbmap.Insert(&msg)
+
+	if err != nil {
+		fmt.Println(string(err.Error()))
+		return nil
+	}
 
 	return nil
 }
 
+func insertDirect(message slack.Message, workspaceid string) (err error) {
+	ev := slack.MessageEvent(message)
+	msg := mappedModel(ev)
+
+	dbmap, err := openDBMap()
+	dbmap.AddTableWithName(Message{}, workspaceid+"-direct").SetKeys(false, "Timestamp")
+
+	var pr Message
+	err = dbmap.SelectOne(&pr, "select * from ?-direct where Timestamp=?", workspaceid, msg.Timestamp)
+
+	if err == nil {
+		return nil
+	}
+
+	err = dbmap.Insert(&msg)
+
+	if err != nil {
+		fmt.Println(string(err.Error()))
+		return nil
+	}
+
+	return nil
+}
+
+// reflectionが使えればこの辺マシになるはずだが、、、
 func mappedModel(message slack.MessageEvent) Message {
 	msg := Message{}
 	msg.BotID = message.BotID
